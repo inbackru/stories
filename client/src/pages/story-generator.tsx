@@ -26,6 +26,10 @@ export default function StoryGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState("#3b82f6");
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [currentPositions, setCurrentPositions] = useState<{
+    floorPlan: any;
+    background: any;
+  }>({ floorPlan: null, background: null });
   
   // Query to load existing template if templateId is present
   const { data: loadedTemplate, isLoading: isLoadingTemplate } = useQuery({
@@ -100,10 +104,26 @@ export default function StoryGenerator() {
         selectedBank: loadedTemplate.selectedBank,
       });
       
-      // Load images if they exist
-      if (loadedTemplate.backgroundImageUrl) {
-        // Note: In a real app, you'd fetch and convert the URL back to a File
-        // For now, we'll show a message that images need to be re-uploaded
+      // Load saved positions
+      if (loadedTemplate.floorPlanPosition) {
+        try {
+          const floorPlanPos = JSON.parse(loadedTemplate.floorPlanPosition);
+          setCurrentPositions(prev => ({ ...prev, floorPlan: floorPlanPos }));
+        } catch (e) {
+          console.warn('Failed to parse floor plan position:', e);
+        }
+      }
+      if (loadedTemplate.backgroundPosition) {
+        try {
+          const backgroundPos = JSON.parse(loadedTemplate.backgroundPosition);
+          setCurrentPositions(prev => ({ ...prev, background: backgroundPos }));
+        } catch (e) {
+          console.warn('Failed to parse background position:', e);
+        }
+      }
+      
+      // Load images if they exist  
+      if (loadedTemplate.backgroundImageUrl || loadedTemplate.floorPlanUrl) {
         toast({
           title: "Шаблон загружен",
           description: "Пожалуйста, повторно загрузите изображения если необходимо",
@@ -122,7 +142,14 @@ export default function StoryGenerator() {
         name: data.name || "Новый проект"
       };
       
-      formData.append("data", JSON.stringify(templateData));
+      // Include position data
+      const templateWithPositions = {
+        ...templateData,
+        floorPlanPosition: currentPositions.floorPlan ? JSON.stringify(currentPositions.floorPlan) : undefined,
+        backgroundPosition: currentPositions.background ? JSON.stringify(currentPositions.background) : undefined
+      };
+      
+      formData.append("data", JSON.stringify(templateWithPositions));
       if (backgroundImage) formData.append("background", backgroundImage);
       if (floorPlan) formData.append("floorPlan", floorPlan);
       
@@ -184,20 +211,20 @@ export default function StoryGenerator() {
       tempCanvas.width = 1080;
       tempCanvas.height = 1920;
       
-      // Draw clean version without editing handles
+      // Draw clean version without editing handles using current positions
       const { drawStoryCanvas } = await import('@/lib/canvas-utils');
       await drawStoryCanvas(
         tempCanvas,
         form.getValues(),
         backgroundImage,
         floorPlan,
-        floorPlan ? {
+        floorPlan ? currentPositions.floorPlan || {
           x: 440,
           y: 650, 
           width: 600,
           height: 400
         } : undefined,
-        backgroundImage ? {
+        backgroundImage ? currentPositions.background || {
           x: 0,
           y: 150,
           width: 1080,
@@ -609,6 +636,11 @@ export default function StoryGenerator() {
                 backgroundImage={backgroundImage}
                 floorPlan={floorPlan}
                 backgroundColor={backgroundColor}
+                initialFloorPlanPosition={currentPositions.floorPlan}
+                initialBackgroundPosition={currentPositions.background}
+                onPositionChange={(floorPlan, background) => {
+                  setCurrentPositions({ floorPlan, background });
+                }}
               />
             </div>
 

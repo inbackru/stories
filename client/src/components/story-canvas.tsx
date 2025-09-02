@@ -8,24 +8,40 @@ interface StoryCanvasProps {
   floorPlan: File | null;
   backgroundColor?: string;
   showEditingHandles?: boolean;
+  initialFloorPlanPosition?: FloorPlanPosition;
+  initialBackgroundPosition?: BackgroundPosition;
+  onPositionChange?: (floorPlan: FloorPlanPosition, background: BackgroundPosition) => void;
 }
 
 export const StoryCanvas = forwardRef<HTMLCanvasElement, StoryCanvasProps>(
-  ({ propertyData, backgroundImage, floorPlan, backgroundColor, showEditingHandles = true }, ref) => {
+  ({ 
+    propertyData, 
+    backgroundImage, 
+    floorPlan, 
+    backgroundColor, 
+    showEditingHandles = true,
+    initialFloorPlanPosition,
+    initialBackgroundPosition,
+    onPositionChange
+  }, ref) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [floorPlanPosition, setFloorPlanPosition] = useState<FloorPlanPosition>({
-      x: 440,
-      y: 650,
-      width: 600,
-      height: 400
-    });
+    const [floorPlanPosition, setFloorPlanPosition] = useState<FloorPlanPosition>(
+      initialFloorPlanPosition || {
+        x: 440,
+        y: 650,
+        width: 600,
+        height: 400
+      }
+    );
     
-    const [backgroundPosition, setBackgroundPosition] = useState<BackgroundPosition>({
-      x: 0,
-      y: 150,
-      width: 1080,
-      height: 1350
-    });
+    const [backgroundPosition, setBackgroundPosition] = useState<BackgroundPosition>(
+      initialBackgroundPosition || {
+        x: 0,
+        y: 150,
+        width: 1080,
+        height: 1350
+      }
+    );
     const [isDragging, setIsDragging] = useState(false);
     const [isResizing, setIsResizing] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -52,6 +68,13 @@ export const StoryCanvas = forwardRef<HTMLCanvasElement, StoryCanvasProps>(
     useEffect(() => {
       redrawCanvas();
     }, [redrawCanvas]);
+
+    // Notify parent of position changes for saving
+    useEffect(() => {
+      if (onPositionChange) {
+        onPositionChange(floorPlanPosition, backgroundPosition);
+      }
+    }, [floorPlanPosition, backgroundPosition, onPositionChange]);
 
     const getMousePos = (e: React.MouseEvent) => {
       const canvas = canvasRef.current;
@@ -133,42 +156,46 @@ export const StoryCanvas = forwardRef<HTMLCanvasElement, StoryCanvasProps>(
 
       // Handle active dragging/resizing operations
       if (isDragging && floorPlan) {
-        setFloorPlanPosition(prev => ({
-          ...prev,
-          x: Math.max(0, Math.min(1080 - prev.width, x - dragStart.x)),
-          y: Math.max(200, Math.min(1720 - prev.height, y - dragStart.y))
-        }));
+        const newPosition = {
+          ...floorPlanPosition,
+          x: Math.max(0, Math.min(1080 - floorPlanPosition.width, x - dragStart.x)),
+          y: Math.max(200, Math.min(1720 - floorPlanPosition.height, y - dragStart.y))
+        };
+        setFloorPlanPosition(newPosition);
         return;
       }
       
       if (isResizing && floorPlan) {
         const newWidth = Math.max(100, x - floorPlanPosition.x);
         const newHeight = Math.max(75, y - floorPlanPosition.y);
-        setFloorPlanPosition(prev => ({
-          ...prev,
-          width: Math.min(newWidth, 1070 - prev.x),
-          height: Math.min(newHeight, 1910 - prev.y)
-        }));
+        const newPosition = {
+          ...floorPlanPosition,
+          width: Math.min(newWidth, 1070 - floorPlanPosition.x),
+          height: Math.min(newHeight, 1910 - floorPlanPosition.y)
+        };
+        setFloorPlanPosition(newPosition);
         return;
       }
       
       if (backgroundDragging && backgroundImage) {
-        setBackgroundPosition(prev => ({
-          ...prev,
+        const newPosition = {
+          ...backgroundPosition,
           x: Math.max(-200, Math.min(1280, x - dragStart.x)),
-          y: Math.max(0, Math.min(1920 - prev.height, y - dragStart.y))
-        }));
+          y: Math.max(0, Math.min(1920 - backgroundPosition.height, y - dragStart.y))
+        };
+        setBackgroundPosition(newPosition);
         return;
       }
       
       if (backgroundResizing && backgroundImage) {
         const newWidth = Math.max(400, x - backgroundPosition.x);
         const newHeight = Math.max(300, y - backgroundPosition.y);
-        setBackgroundPosition(prev => ({
-          ...prev,
-          width: Math.min(newWidth, 1480 - prev.x),
-          height: Math.min(newHeight, 2220 - prev.y)
-        }));
+        const newPosition = {
+          ...backgroundPosition,
+          width: Math.min(newWidth, 1480 - backgroundPosition.x),
+          height: Math.min(newHeight, 2220 - backgroundPosition.y)
+        };
+        setBackgroundPosition(newPosition);
         return;
       }
 

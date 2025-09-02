@@ -247,29 +247,36 @@ export async function drawStoryCanvas(
   );
 
 
-  // Bottom info with better visibility
-  const bottomY = CANVAS_HEIGHT - 180;
-  ctx.font = "bold 32px Inter, sans-serif";
+  // Bottom info with improved visibility for mobile
+  const bottomY = CANVAS_HEIGHT - 120;
   
-  // Add text shadow for better readability
-  ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
-  ctx.shadowBlur = 6;
-  ctx.shadowOffsetX = 2;
-  ctx.shadowOffsetY = 2;
+  // Draw semi-transparent background bar for better text readability
+  ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+  ctx.fillRect(0, bottomY - 80, CANVAS_WIDTH, 120);
+  
+  ctx.font = "bold 40px Inter, sans-serif";
+  
+  // Add strong text shadow for mobile visibility
+  ctx.shadowColor = "rgba(0, 0, 0, 1)";
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetX = 3;
+  ctx.shadowOffsetY = 3;
   
   ctx.fillStyle = "white";
-  ctx.textAlign = "left";
+  ctx.textAlign = "center";
+  
+  // First payment on first line
   ctx.fillText(
     `Первый взнос: ${formatCurrency(propertyData.initialPayment)} ₽`,
-    cardPadding + 30,
-    bottomY
+    CANVAS_WIDTH / 2,
+    bottomY - 25
   );
 
-  ctx.textAlign = "right";
+  // Total cost on second line
   ctx.fillText(
     `Стоимость: ${formatCurrency(propertyData.totalCost)} ₽`,
-    CANVAS_WIDTH - cardPadding - 30,
-    bottomY
+    CANVAS_WIDTH / 2,
+    bottomY + 35
   );
   
   // Reset shadow

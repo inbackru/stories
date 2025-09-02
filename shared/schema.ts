@@ -16,6 +16,8 @@ export const storyTemplates = pgTable("story_templates", {
   selectedBank: text("selected_bank").notNull(),
   backgroundImageUrl: text("background_image_url"),
   floorPlanUrl: text("floor_plan_url"),
+  floorPlanPosition: text("floor_plan_position"), // JSON string
+  backgroundPosition: text("background_position"), // JSON string
   createdAt: text("created_at").default(sql`now()`),
 });
 
@@ -38,6 +40,8 @@ export const propertyFormSchema = z.object({
   bankRate: z.number().min(0.01, "Ставка должна быть больше 0"),
   monthlyPayment: z.number().min(0.01, "Платёж должен быть больше 0"),
   selectedBank: z.enum(["sovkombank", "sberbank", "vtb", "alfabank", "tinkoff"]),
+  floorPlanPosition: z.string().optional(),
+  backgroundPosition: z.string().optional(),
 });
 
 export type PropertyFormData = z.infer<typeof propertyFormSchema>;
