@@ -7,10 +7,11 @@ interface StoryCanvasProps {
   backgroundImage: File | null;
   floorPlan: File | null;
   backgroundColor?: string;
+  showEditingHandles?: boolean;
 }
 
 export const StoryCanvas = forwardRef<HTMLCanvasElement, StoryCanvasProps>(
-  ({ propertyData, backgroundImage, floorPlan, backgroundColor }, ref) => {
+  ({ propertyData, backgroundImage, floorPlan, backgroundColor, showEditingHandles = true }, ref) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [floorPlanPosition, setFloorPlanPosition] = useState<FloorPlanPosition>({
       x: 440,
@@ -42,10 +43,11 @@ export const StoryCanvas = forwardRef<HTMLCanvasElement, StoryCanvasProps>(
           floorPlan, 
           floorPlan ? floorPlanPosition : undefined,
           backgroundImage ? backgroundPosition : undefined,
-          backgroundColor
+          backgroundColor,
+          showEditingHandles
         );
       }
-    }, [propertyData, backgroundImage, floorPlan, floorPlanPosition, backgroundPosition, backgroundColor]);
+    }, [propertyData, backgroundImage, floorPlan, floorPlanPosition, backgroundPosition, backgroundColor, showEditingHandles]);
 
     useEffect(() => {
       redrawCanvas();
@@ -140,12 +142,12 @@ export const StoryCanvas = forwardRef<HTMLCanvasElement, StoryCanvasProps>(
       }
       
       if (isResizing && floorPlan) {
-        const newWidth = Math.max(200, x - floorPlanPosition.x);
-        const newHeight = Math.max(150, y - floorPlanPosition.y);
+        const newWidth = Math.max(100, x - floorPlanPosition.x);
+        const newHeight = Math.max(75, y - floorPlanPosition.y);
         setFloorPlanPosition(prev => ({
           ...prev,
-          width: Math.min(newWidth, 1080 - prev.x),
-          height: Math.min(newHeight, 1920 - prev.y)
+          width: Math.min(newWidth, 1070 - prev.x),
+          height: Math.min(newHeight, 1910 - prev.y)
         }));
         return;
       }

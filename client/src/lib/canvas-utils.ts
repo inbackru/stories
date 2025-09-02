@@ -39,7 +39,8 @@ export async function drawStoryCanvas(
   floorPlan: File | null,
   floorPlanPosition?: FloorPlanPosition,
   backgroundPosition?: BackgroundPosition,
-  backgroundColor?: string
+  backgroundColor?: string,
+  showEditingHandles: boolean = true
 ) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -83,33 +84,36 @@ export async function drawStoryCanvas(
         ctx.drawImage(img, bgX, bgY, bgWidth, bgHeight);
       }
       
-      // Draw visible border around background image
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([10, 5]);
-      ctx.strokeRect(bgX, bgY, bgWidth, bgHeight);
-      ctx.setLineDash([]);
-      
-      // Draw visible resize handle for background image
-      const bgHandleX = bgX + bgWidth - 20;
-      const bgHandleY = bgY + bgHeight - 20;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-      ctx.fillRect(bgHandleX, bgHandleY, 20, 20);
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(bgHandleX, bgHandleY, 20, 20);
-      
-      // Draw resize icon for background
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(bgHandleX + 6, bgHandleY + 14);
-      ctx.lineTo(bgHandleX + 14, bgHandleY + 6);
-      ctx.moveTo(bgHandleX + 10, bgHandleY + 14);
-      ctx.lineTo(bgHandleX + 14, bgHandleY + 10);
-      ctx.moveTo(bgHandleX + 6, bgHandleY + 10);
-      ctx.lineTo(bgHandleX + 10, bgHandleY + 6);
-      ctx.stroke();
+      // Only show editing handles in preview mode
+      if (showEditingHandles) {
+        // Draw visible border around background image
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 5]);
+        ctx.strokeRect(bgX, bgY, bgWidth, bgHeight);
+        ctx.setLineDash([]);
+        
+        // Draw visible resize handle for background image
+        const bgHandleX = bgX + bgWidth - 20;
+        const bgHandleY = bgY + bgHeight - 20;
+        ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+        ctx.fillRect(bgHandleX, bgHandleY, 20, 20);
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bgHandleX, bgHandleY, 20, 20);
+        
+        // Draw resize icon for background
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(bgHandleX + 6, bgHandleY + 14);
+        ctx.lineTo(bgHandleX + 14, bgHandleY + 6);
+        ctx.moveTo(bgHandleX + 10, bgHandleY + 14);
+        ctx.lineTo(bgHandleX + 14, bgHandleY + 10);
+        ctx.moveTo(bgHandleX + 6, bgHandleY + 10);
+        ctx.lineTo(bgHandleX + 10, bgHandleY + 6);
+        ctx.stroke();
+      }
       
       // Add dark overlay for text readability
       ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
@@ -200,42 +204,43 @@ export async function drawStoryCanvas(
       const planX = floorPlanPosition?.x || (CANVAS_WIDTH - planWidth - 60);
       const planY = floorPlanPosition?.y || 700;
       
-      // Draw floor plan with visible border and resize handle
-      
-      // Draw semi-transparent border around floor plan for visibility
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 5]);
-      ctx.strokeRect(planX, planY, planWidth, planHeight);
-      ctx.setLineDash([]);
-      
-      // Draw plan image
-      const { x, y, width, height } = calculateImageFit(planImg, planWidth - 20, planHeight - 20);
+      // Draw floor plan image with minimal padding
+      const { x, y, width, height } = calculateImageFit(planImg, planWidth - 4, planHeight - 4);
       ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
       ctx.shadowBlur = 10;
-      ctx.drawImage(planImg, planX + 10 + x, planY + 10 + y, width, height);
+      ctx.drawImage(planImg, planX + 2 + x, planY + 2 + y, width, height);
       ctx.shadowBlur = 0;
       
-      // Draw visible resize handle for floor plan
-      const handleX = planX + planWidth - 20;
-      const handleY = planY + planHeight - 20;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-      ctx.fillRect(handleX, handleY, 20, 20);
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(handleX, handleY, 20, 20);
-      
-      // Draw resize icon
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.7)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(handleX + 6, handleY + 14);
-      ctx.lineTo(handleX + 14, handleY + 6);
-      ctx.moveTo(handleX + 10, handleY + 14);
-      ctx.lineTo(handleX + 14, handleY + 10);
-      ctx.moveTo(handleX + 6, handleY + 10);
-      ctx.lineTo(handleX + 10, handleY + 6);
-      ctx.stroke();
+      // Only show editing handles in preview mode
+      if (showEditingHandles) {
+        // Draw semi-transparent border around floor plan for visibility
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(planX, planY, planWidth, planHeight);
+        ctx.setLineDash([]);
+        
+        // Draw visible resize handle for floor plan
+        const handleX = planX + planWidth - 20;
+        const handleY = planY + planHeight - 20;
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+        ctx.fillRect(handleX, handleY, 20, 20);
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(handleX, handleY, 20, 20);
+        
+        // Draw resize icon
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.7)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(handleX + 6, handleY + 14);
+        ctx.lineTo(handleX + 14, handleY + 6);
+        ctx.moveTo(handleX + 10, handleY + 14);
+        ctx.lineTo(handleX + 14, handleY + 10);
+        ctx.moveTo(handleX + 6, handleY + 10);
+        ctx.lineTo(handleX + 10, handleY + 6);
+        ctx.stroke();
+      }
     } catch (error) {
       console.error("Failed to load floor plan:", error);
     }

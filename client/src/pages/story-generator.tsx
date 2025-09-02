@@ -177,11 +177,39 @@ export default function StoryGenerator() {
     }
   };
 
-  const downloadImage = () => {
+  const downloadImage = async () => {
     if (canvasRef.current) {
+      // Create a temporary canvas for clean download without editing handles
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = 1080;
+      tempCanvas.height = 1920;
+      
+      // Draw clean version without editing handles
+      const { drawStoryCanvas } = await import('@/lib/canvas-utils');
+      await drawStoryCanvas(
+        tempCanvas,
+        form.getValues(),
+        backgroundImage,
+        floorPlan,
+        floorPlan ? {
+          x: 440,
+          y: 650, 
+          width: 600,
+          height: 400
+        } : undefined,
+        backgroundImage ? {
+          x: 0,
+          y: 150,
+          width: 1080,
+          height: 1350
+        } : undefined,
+        backgroundColor,
+        false // No editing handles
+      );
+      
       const link = document.createElement("a");
       link.download = "whatsapp-story.png";
-      link.href = canvasRef.current.toDataURL("image/png", 1.0);
+      link.href = tempCanvas.toDataURL("image/png", 1.0);
       link.click();
     }
   };
