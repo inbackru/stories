@@ -38,7 +38,8 @@ export async function drawStoryCanvas(
   backgroundImage: File | null,
   floorPlan: File | null,
   floorPlanPosition?: FloorPlanPosition,
-  backgroundPosition?: BackgroundPosition
+  backgroundPosition?: BackgroundPosition,
+  backgroundColor?: string
 ) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -47,25 +48,68 @@ export async function drawStoryCanvas(
   canvas.width = CANVAS_WIDTH;
   canvas.height = CANVAS_HEIGHT;
 
-  // Clear canvas with gradient background
-  const gradient = ctx.createLinearGradient(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  gradient.addColorStop(0, "hsl(217, 91%, 60%)");
-  gradient.addColorStop(1, "hsl(217, 91%, 45%)");
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  // Clear canvas with custom or gradient background
+  if (backgroundColor) {
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  } else {
+    const gradient = ctx.createLinearGradient(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    gradient.addColorStop(0, "hsl(217, 91%, 60%)");
+    gradient.addColorStop(1, "hsl(217, 91%, 45%)");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  }
 
   // Draw background image if available
   if (backgroundImage) {
     try {
       const img = await loadImage(backgroundImage);
       
+      let bgX, bgY, bgWidth, bgHeight;
+      
       // Use custom background position if provided
       if (backgroundPosition) {
-        ctx.drawImage(img, backgroundPosition.x, backgroundPosition.y, backgroundPosition.width, backgroundPosition.height);
+        bgX = backgroundPosition.x;
+        bgY = backgroundPosition.y;
+        bgWidth = backgroundPosition.width;
+        bgHeight = backgroundPosition.height;
+        ctx.drawImage(img, bgX, bgY, bgWidth, bgHeight);
       } else {
         const { x, y, width, height } = calculateImageFit(img, CANVAS_WIDTH, CANVAS_HEIGHT * 0.7);
-        ctx.drawImage(img, x, y + 150, width, height);
+        bgX = x;
+        bgY = y + 150;
+        bgWidth = width;
+        bgHeight = height;
+        ctx.drawImage(img, bgX, bgY, bgWidth, bgHeight);
       }
+      
+      // Draw visible border around background image
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([10, 5]);
+      ctx.strokeRect(bgX, bgY, bgWidth, bgHeight);
+      ctx.setLineDash([]);
+      
+      // Draw visible resize handle for background image
+      const bgHandleX = bgX + bgWidth - 20;
+      const bgHandleY = bgY + bgHeight - 20;
+      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.fillRect(bgHandleX, bgHandleY, 20, 20);
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bgHandleX, bgHandleY, 20, 20);
+      
+      // Draw resize icon for background
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(bgHandleX + 6, bgHandleY + 14);
+      ctx.lineTo(bgHandleX + 14, bgHandleY + 6);
+      ctx.moveTo(bgHandleX + 10, bgHandleY + 14);
+      ctx.lineTo(bgHandleX + 14, bgHandleY + 10);
+      ctx.moveTo(bgHandleX + 6, bgHandleY + 10);
+      ctx.lineTo(bgHandleX + 10, bgHandleY + 6);
+      ctx.stroke();
       
       // Add dark overlay for text readability
       ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
@@ -156,14 +200,42 @@ export async function drawStoryCanvas(
       const planX = floorPlanPosition?.x || (CANVAS_WIDTH - planWidth - 60);
       const planY = floorPlanPosition?.y || 700;
       
-      // No border around floor plan
+      // Draw floor plan with visible border and resize handle
       
-      // Draw plan image directly without background
+      // Draw semi-transparent border around floor plan for visibility
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.strokeRect(planX, planY, planWidth, planHeight);
+      ctx.setLineDash([]);
+      
+      // Draw plan image
       const { x, y, width, height } = calculateImageFit(planImg, planWidth - 20, planHeight - 20);
       ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
       ctx.shadowBlur = 10;
       ctx.drawImage(planImg, planX + 10 + x, planY + 10 + y, width, height);
       ctx.shadowBlur = 0;
+      
+      // Draw visible resize handle for floor plan
+      const handleX = planX + planWidth - 20;
+      const handleY = planY + planHeight - 20;
+      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      ctx.fillRect(handleX, handleY, 20, 20);
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(handleX, handleY, 20, 20);
+      
+      // Draw resize icon
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.7)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(handleX + 6, handleY + 14);
+      ctx.lineTo(handleX + 14, handleY + 6);
+      ctx.moveTo(handleX + 10, handleY + 14);
+      ctx.lineTo(handleX + 14, handleY + 10);
+      ctx.moveTo(handleX + 6, handleY + 10);
+      ctx.lineTo(handleX + 10, handleY + 6);
+      ctx.stroke();
     } catch (error) {
       console.error("Failed to load floor plan:", error);
     }

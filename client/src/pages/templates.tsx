@@ -187,15 +187,17 @@ export default function Templates() {
                   </div>
 
                   <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      data-testid={`button-view-${template.id}`}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Открыть
-                    </Button>
+                    <Link href={`/?template=${template.id}`}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        data-testid={`button-view-${template.id}`}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Редактировать
+                      </Button>
+                    </Link>
                     <Button
                       variant="outline"
                       size="sm"

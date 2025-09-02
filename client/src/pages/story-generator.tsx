@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,10 +19,25 @@ import { Link } from "wouter";
 
 export default function StoryGenerator() {
   const { toast } = useToast();
+  const [location] = useLocation();
+  const templateId = new URLSearchParams(window.location.search).get('template');
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
   const [floorPlan, setFloorPlan] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [backgroundColor, setBackgroundColor] = useState("#3b82f6");
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  // Query to load existing template if templateId is present
+  const { data: loadedTemplate, isLoading: isLoadingTemplate } = useQuery({
+    queryKey: ["/api/templates", templateId],
+    queryFn: async () => {
+      if (!templateId) return null;
+      const response = await fetch(`/api/templates/${templateId}`);
+      if (!response.ok) throw new Error('Template not found');
+      return response.json();
+    },
+    enabled: !!templateId
+  });
 
   const form = useForm<PropertyFormData>({
     resolver: zodResolver(propertyFormSchema),
@@ -69,6 +85,33 @@ export default function StoryGenerator() {
     }
   }, [watchedValues, form]);
 
+  // Load template data when available
+  useEffect(() => {
+    if (loadedTemplate && !form.formState.isDirty) {
+      form.reset({
+        name: loadedTemplate.name,
+        propertyAddress: loadedTemplate.propertyAddress,
+        propertyType: loadedTemplate.propertyType,
+        propertyArea: loadedTemplate.propertyArea,
+        totalCost: loadedTemplate.totalCost,
+        initialPayment: loadedTemplate.initialPayment,
+        bankRate: loadedTemplate.bankRate,
+        monthlyPayment: loadedTemplate.monthlyPayment,
+        selectedBank: loadedTemplate.selectedBank,
+      });
+      
+      // Load images if they exist
+      if (loadedTemplate.backgroundImageUrl) {
+        // Note: In a real app, you'd fetch and convert the URL back to a File
+        // For now, we'll show a message that images need to be re-uploaded
+        toast({
+          title: "Шаблон загружен",
+          description: "Пожалуйста, повторно загрузите изображения если необходимо",
+        });
+      }
+    }
+  }, [loadedTemplate, form]);
+
   const saveMutation = useMutation({
     mutationFn: async (data: PropertyFormData) => {
       const formData = new FormData();
@@ -83,7 +126,11 @@ export default function StoryGenerator() {
       if (backgroundImage) formData.append("background", backgroundImage);
       if (floorPlan) formData.append("floorPlan", floorPlan);
       
-      return apiRequest("POST", "/api/templates", formData);
+      // If we're editing an existing template, use PUT method
+      const method = templateId ? "PUT" : "POST";
+      const url = templateId ? `/api/templates/${templateId}` : "/api/templates";
+      
+      return apiRequest(method, url, formData);
     },
     onSuccess: () => {
       toast({
@@ -153,6 +200,17 @@ export default function StoryGenerator() {
     "3k": "3К квартира",
     studio: "Студия",
   };
+
+  if (isLoadingTemplate) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Загрузка шаблона...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -315,9 +373,10 @@ export default function StoryGenerator() {
                             <FormControl>
                               <Input
                                 type="number"
+                                step="0.01"
                                 placeholder="5922500"
                                 {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                 data-testid="input-total-cost"
                               />
                             </FormControl>
@@ -335,9 +394,10 @@ export default function StoryGenerator() {
                             <FormControl>
                               <Input
                                 type="number"
+                                step="0.01"
                                 placeholder="1783000"
                                 {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                 data-testid="input-initial-payment"
                               />
                             </FormControl>
@@ -459,6 +519,27 @@ export default function StoryGenerator() {
                     />
                   </div>
 
+                  {/* Background Color */}
+                  <div className="pt-4">
+                    <h3 className="text-md font-semibold mb-4 flex items-center">
+                      <DraftingCompass className="text-primary mr-3" />
+                      Цвет фона
+                    </h3>
+                    <div className="flex items-center space-x-4">
+                      <Label htmlFor="bg-color" className="text-sm text-muted-foreground">
+                        Выберите цвет фона сторис:
+                      </Label>
+                      <Input
+                        id="bg-color"
+                        type="color"
+                        value={backgroundColor}
+                        onChange={(e) => setBackgroundColor(e.target.value)}
+                        className="w-16 h-10 border-2 cursor-pointer"
+                        data-testid="input-background-color"
+                      />
+                    </div>
+                  </div>
+
                   {/* Generate Button */}
                   <Button
                     type="submit"
@@ -499,6 +580,7 @@ export default function StoryGenerator() {
                 propertyData={form.watch()}
                 backgroundImage={backgroundImage}
                 floorPlan={floorPlan}
+                backgroundColor={backgroundColor}
               />
             </div>
 

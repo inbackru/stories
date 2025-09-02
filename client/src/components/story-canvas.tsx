@@ -6,10 +6,11 @@ interface StoryCanvasProps {
   propertyData: PropertyFormData;
   backgroundImage: File | null;
   floorPlan: File | null;
+  backgroundColor?: string;
 }
 
 export const StoryCanvas = forwardRef<HTMLCanvasElement, StoryCanvasProps>(
-  ({ propertyData, backgroundImage, floorPlan }, ref) => {
+  ({ propertyData, backgroundImage, floorPlan, backgroundColor }, ref) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [floorPlanPosition, setFloorPlanPosition] = useState<FloorPlanPosition>({
       x: 440,
@@ -40,10 +41,11 @@ export const StoryCanvas = forwardRef<HTMLCanvasElement, StoryCanvasProps>(
           backgroundImage, 
           floorPlan, 
           floorPlan ? floorPlanPosition : undefined,
-          backgroundImage ? backgroundPosition : undefined
+          backgroundImage ? backgroundPosition : undefined,
+          backgroundColor
         );
       }
-    }, [propertyData, backgroundImage, floorPlan, floorPlanPosition, backgroundPosition]);
+    }, [propertyData, backgroundImage, floorPlan, floorPlanPosition, backgroundPosition, backgroundColor]);
 
     useEffect(() => {
       redrawCanvas();

@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 export interface IStorage {
   getTemplate(id: string): Promise<StoryTemplate | undefined>;
   createTemplate(template: InsertStoryTemplate): Promise<StoryTemplate>;
+  updateTemplate(id: string, template: Partial<InsertStoryTemplate>): Promise<StoryTemplate | undefined>;
   listTemplates(): Promise<StoryTemplate[]>;
 }
 
@@ -29,6 +30,23 @@ export class MemStorage implements IStorage {
     };
     this.templates.set(id, template);
     return template;
+  }
+
+  async updateTemplate(id: string, updateData: Partial<InsertStoryTemplate>): Promise<StoryTemplate | undefined> {
+    const existingTemplate = this.templates.get(id);
+    if (!existingTemplate) {
+      return undefined;
+    }
+
+    const updatedTemplate: StoryTemplate = {
+      ...existingTemplate,
+      ...updateData,
+      id, // Keep the same ID
+      createdAt: existingTemplate.createdAt, // Keep the same creation date
+    };
+
+    this.templates.set(id, updatedTemplate);
+    return updatedTemplate;
   }
 
   async listTemplates(): Promise<StoryTemplate[]> {
