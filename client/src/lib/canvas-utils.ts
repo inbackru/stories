@@ -247,14 +247,11 @@ export async function drawStoryCanvas(
   );
 
 
-  // Bottom info with improved visibility for mobile
-  const bottomY = CANVAS_HEIGHT - 120;
+  // Bottom info with improved visibility and left alignment
+  const bottomY = CANVAS_HEIGHT - 160;
+  const leftPadding = 60;
   
-  // Draw semi-transparent background bar for better text readability
-  ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-  ctx.fillRect(0, bottomY - 80, CANVAS_WIDTH, 120);
-  
-  ctx.font = "bold 40px Inter, sans-serif";
+  ctx.font = "bold 48px Inter, sans-serif";
   
   // Add strong text shadow for mobile visibility
   ctx.shadowColor = "rgba(0, 0, 0, 1)";
@@ -263,20 +260,20 @@ export async function drawStoryCanvas(
   ctx.shadowOffsetY = 3;
   
   ctx.fillStyle = "white";
-  ctx.textAlign = "center";
+  ctx.textAlign = "left";
   
   // First payment on first line
   ctx.fillText(
     `Первый взнос: ${formatCurrency(propertyData.initialPayment)} ₽`,
-    CANVAS_WIDTH / 2,
-    bottomY - 25
+    leftPadding,
+    bottomY
   );
 
   // Total cost on second line
   ctx.fillText(
     `Стоимость: ${formatCurrency(propertyData.totalCost)} ₽`,
-    CANVAS_WIDTH / 2,
-    bottomY + 35
+    leftPadding,
+    bottomY + 60
   );
   
   // Reset shadow

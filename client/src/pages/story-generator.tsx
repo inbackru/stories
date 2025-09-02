@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -638,9 +638,9 @@ export default function StoryGenerator() {
                 backgroundColor={backgroundColor}
                 initialFloorPlanPosition={currentPositions.floorPlan}
                 initialBackgroundPosition={currentPositions.background}
-                onPositionChange={(floorPlan, background) => {
+                onPositionChange={useCallback((floorPlan: any, background: any) => {
                   setCurrentPositions({ floorPlan, background });
-                }}
+                }, [])}
               />
             </div>
 

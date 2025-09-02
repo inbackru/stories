@@ -69,11 +69,15 @@ export const StoryCanvas = forwardRef<HTMLCanvasElement, StoryCanvasProps>(
       redrawCanvas();
     }, [redrawCanvas]);
 
-    // Notify parent of position changes for saving
+    // Notify parent of position changes for saving (with debounce to prevent flickering)
     useEffect(() => {
-      if (onPositionChange) {
-        onPositionChange(floorPlanPosition, backgroundPosition);
-      }
+      const timeoutId = setTimeout(() => {
+        if (onPositionChange) {
+          onPositionChange(floorPlanPosition, backgroundPosition);
+        }
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
     }, [floorPlanPosition, backgroundPosition, onPositionChange]);
 
     const getMousePos = (e: React.MouseEvent) => {
